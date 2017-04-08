@@ -1,0 +1,3 @@
+#!/bin/sh
+rm -rf priv/iconv_enode c_src/iconv_enode.o
+clang -o priv/iconv_enode c_src/iconv_enode.c  -L ~/.kerl/installs/erl17/usr/lib/ -I ~/.kerl/installs/erl17/usr/include/ -D_REENTRANT=PTHREADS -lerl_interface -lei -lpthread

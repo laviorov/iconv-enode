@@ -1,0 +1,14 @@
+{application, iconv, [
+   {description, "iconv erlang c node" },
+   {vsn, "0.1" },
+   {mod, {iconv_app, []}},
+   {applications, [
+      kernel,
+      stdlib,
+      lager
+   ]},
+   {env, [
+      %{lager, [{handlers, [{lager_console_backend, info}]}]}
+      {lager_console_backend, [info, {lager_default_formatter, [time, color, " [",severity,"] ", message, "\e[0m\r\n"]}]}
+   ]}
+]}.
