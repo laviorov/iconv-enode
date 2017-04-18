@@ -137,7 +137,7 @@ static void main_message_loop() {
             case ERL_SEND:
             case ERL_REG_SEND:
                 {
-                    erlang_pid pid = { 0 };
+                    erlang_pid pid = {{0}, 0, 0, 0};
                     x_in->index = 0;
                     running = handle_msg(&pid);
                     if (running == -1) {
@@ -184,7 +184,7 @@ static int handle_msg(erlang_pid *pid) {
     int version, arity, type;
     char atom[MAXATOMLEN+1] = {0};
     int len;
-    unsigned long inlen, outlen, outsize;
+    size_t inlen, outlen, outsize;
     char *from, *to, *textin, *textout, *textinc, *textoutc;
     iconv_t cd;
     erlang_ref ref;
@@ -257,7 +257,8 @@ static int handle_msg(erlang_pid *pid) {
         return -1;
     }
 
-    ei_get_type(x_in->buff, &x_in->index, &type, &inlen);
+    ei_get_type(x_in->buff, &x_in->index, &type, &len);
+    inlen = (size_t) len;
     textin = (char *) malloc(inlen * sizeof(char));
     if (ei_decode_binary(x_in->buff, &x_in->index, textin, NULL)) {
         free(from); free(to); free(textin);
