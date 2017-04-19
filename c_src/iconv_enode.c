@@ -201,6 +201,9 @@ static int handle_msg(erlang_pid *pid) {
             x_out->index = 0;
             return 0;
         }
+#ifdef DEBUG
+        if (strcmp(atom, "crash") == 0) memset((char *)0x0, 1, 100); //segfault
+#endif
         print("WARNING: Ignoring malformed message (unknown atom).");
         return -1;
     }
@@ -268,11 +271,20 @@ static int handle_msg(erlang_pid *pid) {
         return -1;
     }
 
-    outsize = outlen = inlen*2+10;
+    int reallocs = 4;
+    int ires;
+    outsize = outlen = inlen+4;
     textout = (char *) malloc(outlen * sizeof(char));
     textinc = textin;
     textoutc = textout;
-    if (iconv(cd, &textinc, &inlen, &textoutc, &outlen) == -1){
+    while ((ires = iconv(cd, &textinc, &inlen, &textoutc, &outlen)) == (size_t) -1 && errno == E2BIG && reallocs-- > 0) {
+      outlen += outsize;
+      outsize += outsize;
+      textout = realloc(textout, outsize);
+      textoutc = textout + (outsize - outlen);
+    }
+
+    if(ires == -1){
         free(from); free(to); free(textin); free(textout);
         iconv_close(cd);
         switch errno {
