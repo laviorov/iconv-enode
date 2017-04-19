@@ -1,0 +1,4 @@
+not_supported The conversion from fromcode to tocode is not supported by the implementation.
+einval        An incomplete multibyte sequence has been encountered in the input.
+eilseq        An invalid multibyte sequence has been encountered in the input.
+e2big         Memory allocation failure

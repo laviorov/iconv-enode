@@ -9,7 +9,7 @@ start_link() ->
 
 init([]) ->
     {ok, 
-     {{one_for_all, 0, 1}, 
+     {{one_for_all, 10, 1},
       [
        {iconv, {iconv, start_link, []}, permanent, 1000, worker, [iconv]}
       ]}}.

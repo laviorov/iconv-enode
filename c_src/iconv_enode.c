@@ -163,19 +163,21 @@ static void main_message_loop() {
     }
 }
 
-static void set_error_msg(ei_x_buff *x_out, const erlang_ref *ref, const char *reason) {
+static void set_error_msg(ei_x_buff *x_out, const erlang_ref *ref, const char *code, const char *reason) {
     x_out->index = 0;
     ei_x_encode_version(x_out);
     ei_x_encode_tuple_header(x_out, 3);
     ei_x_encode_atom(x_out, "error");
     ei_x_encode_ref(x_out, ref);
-    ei_x_encode_string(x_out, reason);
+    ei_x_encode_tuple_header(x_out, 2);
+    ei_x_encode_atom(x_out, code);
+    ei_x_encode_binary(x_out, reason, strlen(reason));
 }
 
 static int handle_msg(erlang_pid *pid) {
     /* 
        in :: stop | {conv, Pid, From, To, Text}
-       out :: {error, Ref, Reason} | {ok, Ref, Text}
+       out :: {error, Ref, {ReasonCode, Reason}} | {ok, Ref, Text}
     */
 
     ei_x_buff *x_in = &STATE.x_in;
@@ -250,7 +252,7 @@ static int handle_msg(erlang_pid *pid) {
     if ((cd = iconv_open(to, from)) == (iconv_t)-1){
         free(from); free(to);
         if (errno == EINVAL) {
-            set_error_msg(x_out, &ref, "The conversion from fromcode to tocode is not supported by the implementation.");
+            set_error_msg(x_out, &ref, "not_supported", "The conversion from fromcode to tocode is not supported by the implementation.");
             return 1;
         }
         print("WARNING: Failure to initiate iconv.");
@@ -274,10 +276,10 @@ static int handle_msg(erlang_pid *pid) {
         free(from); free(to); free(textin); free(textout);
         iconv_close(cd);
         switch errno {
-                case EINVAL: set_error_msg(x_out, &ref, "An incomplete multibyte sequence has been encountered in the input."); break;
-                case EILSEQ: set_error_msg(x_out, &ref, "An invalid multibyte sequence has been encountered in the input."); break;
-                case E2BIG: set_error_msg(x_out, &ref, "Allocation failure"); break;
-                default: set_error_msg(x_out, &ref, "Unknown conversion problem");
+                case EINVAL: set_error_msg(x_out, &ref, "einval", "An incomplete multibyte sequence has been encountered in the input."); break;
+                case EILSEQ: set_error_msg(x_out, &ref, "eilseq", "An invalid multibyte sequence has been encountered in the input."); break;
+                case E2BIG: set_error_msg(x_out, &ref, "e2big", "Allocation failure"); break;
+                default: set_error_msg(x_out, &ref, "other", "Unknown conversion problem");
             }
         return 1;
     }
